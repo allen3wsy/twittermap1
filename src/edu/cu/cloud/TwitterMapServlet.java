@@ -18,7 +18,7 @@ public class TwitterMapServlet extends HttpServlet {
 
 		log.warning("test");
 		try {
-			req.getRequestDispatcher("Index.jsp").forward(req, resp);
+			req.getRequestDispatcher("index2.jsp").forward(req, resp);
 		} catch (ServletException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

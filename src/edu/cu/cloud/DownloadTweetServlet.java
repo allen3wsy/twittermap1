@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServlet;
@@ -32,7 +34,7 @@ public class DownloadTweetServlet extends HttpServlet {
 			url = new URL("http://allen-ryan.elasticbeanstalk.com");
 			conn = (HttpURLConnection) url.openConnection();
 			conn.setRequestMethod("GET");
-			conn.setConnectTimeout(10000);
+			conn.setConnectTimeout(60000);
 			rd = new BufferedReader(
 					new InputStreamReader(conn.getInputStream()));
 
@@ -44,29 +46,40 @@ public class DownloadTweetServlet extends HttpServlet {
 		}
 		StringBuilder sb = new StringBuilder();
 
+		Hashtable<String,ArrayList<String>> tweetList = new Hashtable<String,ArrayList<String>>();
 		try {
 			String read = rd.readLine();
 
+			
 			while (read != null) {
 				if (read.startsWith(">")) {
 					String word = read.substring(1);
 
 					read = rd.readLine();
+					ArrayList<String> coordinateList = new ArrayList<String>();
 					while (read != null && !read.startsWith(">")) {
 						String coor[] = read.split("\t");
 						double lat = Double.parseDouble(coor[0]);
 						double lon = Double.parseDouble(coor[1]);
+						
+						Coordinate coordinate = new Coordinate(lat,lon);
+						coordinateList.add(""+lat+"\t"+lon);
+						
 						sb.append(word + ":\t[" + lat + ", " + lon + "]\n");
 						// write into datastore
 						read = rd.readLine();
 					}
+					tweetList.put(word,coordinateList);
 				}
 
 			}
+			DatastoreAPI.addRecord(tweetList);
 			String content = sb.toString();
 			log.warning(content);
 			log.warning("before send mail");
-			SendEmail.send(content);
+//			SendEmail.send(content);
+			
+			
 			log.warning("after send mail");
 			// do something useful
 		}catch(Exception e){
